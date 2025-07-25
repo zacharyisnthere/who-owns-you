@@ -1,13 +1,20 @@
 {
-    "company_name": "Example Company",
-    "portfolio": ["examplechannel1", "examplechannel2", "examplechannel3"],
-    "owners": {
-        "PE firm 1": {
-            "ownership_type": "Partial"
-        },
-        "PE firm 2": {
-            "ownership_type": "Partial"
-        }
+  "summary": {
+    "total_channels": 48,
+    "ownership_breakdown": {
+      "Full": 29,
+      "Partial": 19,
+      "Unknown": 0
     },
-    "notes": ""
+    "top_pe_firms": [
+      { "firm": "Candle Media", "channels": 12 },
+      { "firm": "Electrify Video Partners", "channels": 10 },
+      { "firm": "Recurrent Ventures", "channels": 8 },
+      { "firm": "Lunar X", "channels": 5 },
+      { "firm": "Star Mountain Capital", "channels": 1 },
+      { "firm": "Highmount Capital", "channels": 1 }
+    ],
+    "notable_trends": "From 2019 to 2024, private equity and PE-backed media firms have increasingly targeted educational, science, and children’s YouTube channels. High-profile deals—such as Electrify Video Partners’ stake in Veritasium and Moonbug’s acquisition of Cocomelon—reflect a strong push toward long-form, brand-safe content. More recently, PE-backed firms have begun diversifying into niche verticals like automotive, tech, and history, while also supporting Shorts-first creators to capture emerging audience formats.",
+    "limitations": "This dataset may omit smaller or unannounced deals, lacks precise YouTube channel IDs/URLs for many entries, and may undercount TikTok-native creators who have not publicly disclosed PE affiliations."
+  }
 }

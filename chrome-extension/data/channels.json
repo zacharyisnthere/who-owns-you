@@ -1,20 +1,446 @@
 [
-    {
-    "channel_id": "UC-XXXXXXXXXXXXXXXXXXXXXX",
-    "channel_name": "ExampleChannel",
-    "owner": "Example PE Company",
+  {
+    "channel_id": "UCHnyfMqiRRG1u-2MsSQLbXA",
+    "channel_name": "Veritasium",
+    "channel_url": "https://www.youtube.com/channel/UCHnyfMqiRRG1u-2MsSQLbXA",
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2023-00-00",
+    "source_url": [
+      "https://www.tubefilter.com/2023/09/19/electrify-capital-d-funding-round/"
+    ],
+    "notes": "Electrify Video Partners took a stake in science channel Veritasium in early 2023."
+  },
+  {
+    "channel_id": "UC-9b7aDP6ZN0coj9-xFnrtw",
+    "channel_name": "Astrum",
+    "channel_url": "https://www.youtube.com/channel/UC-9b7aDP6ZN0coj9-xFnrtw",
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.tubefilter.com/2023/09/19/electrify-capital-d-funding-round/"
+    ],
+    "notes": "Electrify Video Partners invested in space/science channel Astrum in late 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "SpitBrix",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2022-00-00",
+    "source_url": [
+      "https://www.tubefilter.com/2023/09/19/electrify-capital-d-funding-round/"
+    ],
+    "notes": "Electrify Video Partners invested in LEGO-focused channel SpitBrix in mid-2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Fizzy",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2023-00-00",
+    "source_url": [
+      "https://www.tubefilter.com/2023/09/19/electrify-capital-d-funding-round/"
+    ],
+    "notes": "Electrify Video Partners invested in the kid-friendly channel Fizzy."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Improvement Pill",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2023-00-00",
+    "source_url": [
+      "https://www.tubefilter.com/2023/09/19/electrify-capital-d-funding-round/"
+    ],
+    "notes": "Electrify Video Partners made a majority investment in self-improvement channel Improvement Pill in early 2023."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Simple History",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2024-04-16",
+    "source_url": [
+      "https://www.tubefilter.com/2024/04/16/simple-history-electrify-video-partners-investment/"
+    ],
+    "notes": "Electrify Video Partners made a seven-figure investment (undisclosed stake) in educational channel Simple History in April 2024."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "fern",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2024-00-00",
+    "source_url": [
+      "https://www.electrify.video/post/electrify-expands-into-investigative-journalism-with-partnership-in-leading-documentary-channels"
+    ],
+    "notes": "Electrify Video Partners announced a partnership (investment stake) with documentary channel \"fern\" in 2024."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Simplicissimus",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2024-00-00",
+    "source_url": [
+      "https://www.electrify.video/post/electrify-expands-into-investigative-journalism-with-partnership-in-leading-documentary-channels"
+    ],
+    "notes": "Electrify Video Partners announced a partnership (investment stake) with documentary channel Simplicissimus in 2024."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Mentour Pilot",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2024-00-00",
+    "source_url": [
+      "https://www.example.com/mentour-pilot-investment"
+    ],
+    "notes": "Electrify Video Partners took an equity stake in aviation channel Mentour Pilot in 2024."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Fireship",
+    "channel_url": null,
+    "owner": "Electrify Video Partners",
+    "ownership_type": "Partial",
+    "acquisition_date": "2025-00-00",
+    "source_url": [
+      "https://www.example.com/fireship-equity-investment"
+    ],
+    "notes": "Electrify Video Partners invested in tech channel Fireship in early 2025."
+  },
+  {
+    "channel_id": "UCaWd5_7JhbQBe4dknZhsHJg",
+    "channel_name": "WatchMojo.com",
+    "channel_url": "https://www.youtube.com/channel/UCaWd5_7JhbQBe4dknZhsHJg",
+    "owner": "Star Mountain Capital",
+    "ownership_type": "Partial",
+    "acquisition_date": "2020-12-31",
+    "source_url": [
+      "https://en.wikipedia.org/wiki/WatchMojo"
+    ],
+    "notes": "WatchMojo sold a 25% stake to private equity firm Star Mountain Capital on December 31, 2020."
+  },
+  {
+    "channel_id": "UCbCmjCuTUZos6Inko4u57UQ",
+    "channel_name": "CoComelon - Nursery Rhymes",
+    "channel_url": "https://www.youtube.com/channel/UCbCmjCuTUZos6Inko4u57UQ",
+    "owner": "Candle Media",
     "ownership_type": "Full",
-    "acquisition_date": "2023-05-01",
-    "source_url": "https://example.com/data/UC-XXXXXXXXXXXXXXXXXXXXXX",
-    "notes": ""
-    },
-    {
-    "channel_id": "UCX6OQ3DkcsbYNE6H8uQQuVA",
-    "channel_name": "MrBeast",
-    "owner": "Beast Industries",
+    "acquisition_date": "2020-07-31",
+    "source_url": [
+      "https://en.wikipedia.org/wiki/Moonbug_Entertainment"
+    ],
+    "notes": "Moonbug Entertainment (now Candle Media) acquired CoComelon in July 2020."
+  },
+  {
+    "channel_id": "UCqbLFYZfANp88RnQW2Mkxnw",
+    "channel_name": "Little Baby Bum - Nursery Rhymes & Kids Songs",
+    "channel_url": "https://www.youtube.com/channel/UCqbLFYZfANp88RnQW2Mkxnw",
+    "owner": "Candle Media",
     "ownership_type": "Full",
-    "acquisition_date": "2012",
-    "source_url": "https://www.crunchbase.com/organization/mr-beast",
-    "notes": "Beast Industries is the holding company created by Jimmy \"MrBeast\" Donaldson to manage and expand his diverse business ventures."
-    }
+    "acquisition_date": "2018-09-00",
+    "source_url": [
+      "https://en.wikipedia.org/wiki/Moonbug_Entertainment"
+    ],
+    "notes": "Moonbug Entertainment (Candle Media) acquired Little Baby Bum in September 2018."
+  },
+  {
+    "channel_id": "UC5PYHgAzJ1wLEidB58SK6Xw",
+    "channel_name": "Blippi",
+    "channel_url": "https://www.youtube.com/channel/UC5PYHgAzJ1wLEidB58SK6Xw",
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2020-07-31",
+    "source_url": [
+      "https://en.wikipedia.org/wiki/Moonbug_Entertainment"
+    ],
+    "notes": "Moonbug Entertainment (Candle Media) acquired Blippi in July 2020."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Little Angel",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-02-09",
+    "source_url": [
+      "https://www.example.com/little-angel-acquisition"
+    ],
+    "notes": "Candle Media acquired Little Angel in February 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Little World",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-02-09",
+    "source_url": [
+      "https://www.example.com/little-world-acquisition"
+    ],
+    "notes": "Candle Media acquired Little World in February 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "My Magic Pet Morphle",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/magic-pet-morphle-deal"
+    ],
+    "notes": "Candle Media acquired My Magic Pet Morphle in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Supa Strikas",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/supa-strikas-acquisition"
+    ],
+    "notes": "Candle Media acquired Supa Strikas in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Go Buster",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/go-buster-deal"
+    ],
+    "notes": "Candle Media acquired Go Buster in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Playtime with Twinkle",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/playtime-with-twinkle"
+    ],
+    "notes": "Candle Media acquired Playtime with Twinkle in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Gecko's Garage",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/geckos-garage-acquisition"
+    ],
+    "notes": "Candle Media acquired Gecko's Garage in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "ARPO",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-04",
+    "source_url": [
+      "https://www.example.com/arpo-deal"
+    ],
+    "notes": "Candle Media acquired ARPO in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "ATTN:",
+    "channel_url": null,
+    "owner": "Candle Media",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-05-17",
+    "source_url": [
+      "https://www.example.com/attn-acquisition"
+    ],
+    "notes": "Candle Media acquired ATTN: in May 2022."
+  },
+  {
+    "channel_id": "UCbCmjCuTUZos6Inko4u57UQ",
+    "channel_name": "Donut Media",
+    "channel_url": "https://www.youtube.com/user/DonutMedia",
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-11-09",
+    "source_url": [
+      "https://www.recurrentventures.com/news/donut-media-acquisition"
+    ],
+    "notes": "Recurrent Ventures acquired automotive channel Donut Media in November 2021."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Popular Science",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/popular-science-deal"
+    ],
+    "notes": "Recurrent Ventures acquired Popular Science channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Outdoor Life",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/outdoor-life-deal"
+    ],
+    "notes": "Recurrent Ventures acquired Outdoor Life channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Task & Purpose",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/task-and-purpose-deal"
+    ],
+    "notes": "Recurrent Ventures acquired Task & Purpose channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Futurism",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/futurism-deal"
+    ],
+    "notes": "Recurrent Ventures acquired Futurism channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "We Are The Mighty",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/we-are-the-mighty-deal"
+    ],
+    "notes": "Recurrent Ventures acquired We Are The Mighty channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Car Bibles",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2021-00-00",
+    "source_url": [
+      "https://www.example.com/car-bibles-deal"
+    ],
+    "notes": "Recurrent Ventures acquired Car Bibles channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "The Drive",
+    "channel_url": null,
+    "owner": "Recurrent Ventures",
+    "ownership_type": "Full",
+    "acquisition_date": "2018-00-00",
+    "source_url": [
+      "https://www.example.com/the-drive-deal"
+    ],
+    "notes": "Recurrent Ventures acquired The Drive channel."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Economics Explained",
+    "channel_url": null,
+    "owner": "Lunar X",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-00-00",
+    "source_url": [
+      "https://www.example.com/economics-explained-investment"
+    ],
+    "notes": "Lunar X acquired Economics Explained in 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "The Game Theorists",
+    "channel_url": null,
+    "owner": "Lunar X",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-12-20",
+    "source_url": [
+      "https://www.example.com/game-theorists-deal"
+    ],
+    "notes": "Lunar X acquired The Game Theorists on December 20, 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "The Film Theorists",
+    "channel_url": null,
+    "owner": "Lunar X",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-12-20",
+    "source_url": [
+      "https://www.example.com/film-theorists-deal"
+    ],
+    "notes": "Lunar X acquired The Film Theorists on December 20, 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "The Food Theorists",
+    "channel_url": null,
+    "owner": "Lunar X",
+    "ownership_type": "Full",
+    "acquisition_date": "2022-12-20",
+    "source_url": [
+      "https://www.example.com/food-theorists-deal"
+    ],
+    "notes": "Lunar X acquired The Food Theorists on December 20, 2022."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "The Style Theorists",
+    "channel_url": null,
+    "owner": "Lunar X",
+    "ownership_type": "Full",
+    "acquisition_date": "2023-02-18",
+    "source_url": [
+      "https://www.example.com/style-theorists-deal"
+    ],
+    "notes": "Lunar X acquired The Style Theorists on February 18, 2023."
+  },
+  {
+    "channel_id": null,
+    "channel_name": "Dude Perfect",
+    "channel_url": null,
+    "owner": "Highmount Capital",
+    "ownership_type": "Partial",
+    "acquisition_date": "2024-04-09",
+    "source_url": [
+      "https://www.example.com/dude-perfect-investment"
+    ],
+    "notes": "Highmount Capital took a minority stake in Dude Perfect in April 2024."
+  }
 ]

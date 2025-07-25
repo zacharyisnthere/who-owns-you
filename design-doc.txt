@@ -1,6 +1,10 @@
+Design Doc:
+
 A browser extension that shows which youtube channels are owned by private equity.
 
 Equitube?
+Who Owns You
+
 
 Working on the title still, but the point of this extension is to display some text that shows if a given youtube channel is owned by private equity, which private equity, how much, and any other publicly available information. The app should be open source, with all the code and data publicly available via github.
 
@@ -35,3 +39,20 @@ Process:
 Also provide a way for community members to submit updates, corrections, or new entries
 
 Provide a disclaimer: data is publicly sourced and incomplete by nature
+
+
+
+The JSON Library should look like this: (note that the source_url variable can be ignored for now. Just leave it as the default example entry.)
+
+{
+    "channel_id": "UC-XXXXXXXXXXXXXXXXXXXXXX",
+    "channel_name": "ExampleChannel",
+    "owner": "Example PE Company",
+    "ownership_type": "Full",
+    "acquisition_date": "2023-05-01",
+    "source_url": "https://example.com/data/UC-XXXXXXXXXXXXXXXXXXXXXX",
+    "notes": ""
+}
+
+
+[End of design doc.]
