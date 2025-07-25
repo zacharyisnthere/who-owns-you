@@ -1,8 +1,23 @@
 {
-  "name": "Hello Extensions of the world!",
-  "description": "Base Level Extension",
-  "version": "1.0",
+  "name": "Who Owns You",
+  "description": "Shows which youtube channels are owned by private equity.",
+  "version": "1.0.1",
   "manifest_version": 3,
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["data/channels.json"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "hello.html",
     "default_icon": "hello_extensions.png"
