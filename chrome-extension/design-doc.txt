@@ -1,4 +1,4 @@
-extension that shows what private equity companies youtube channels are owned by
+A browser extension that shows which youtube channels are owned by private equity.
 
 Equitube?
 
