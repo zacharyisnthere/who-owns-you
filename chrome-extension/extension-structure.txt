@@ -1,0 +1,15 @@
+my-extension/
+|-  manifest.json
+|-  background.js
+|-  scripts/
+|   |-  content.js
+|   |-  react.production.min.js (?)
+|-  popup/
+|   |-  popup.html
+|   |-  popup.js
+|   |-  popup.css
+|-  images/
+    |-  icon-16.png
+    |-  icon-32.png
+    |-  icon-48.png
+    |-  icon-128.png (why different icons?)

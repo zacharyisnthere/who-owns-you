@@ -1,0 +1,37 @@
+extension that shows what private equity companies youtube channels are owned by
+
+Equitube?
+
+Working on the title still, but the point of this extension is to display some text that shows if a given youtube channel is owned by private equity, which private equity, how much, and any other publicly available information. The app should be open source, with all the code and data publicly available via github.
+
+
+The app needs a database of known private equity companies and the channels that are within their portfolio. Other information the library should include is the date that the channel was acquired, and (if known) whether the acquisition was for partial or total control. 
+
+
+The app needs to display this information in a non-intrusive, convenient location on the youtube browser window and needs to provide a way to see whatever more information we might have.
+
+
+The app should have an obvious disclaimer about the information it runs off of, and how it only displays publicly disclosed information. There could be channels that have been acquired that we don't know anything about, by it's own nature private equity tends to be pretty *private*.
+
+
+The app should have the entire database be accessible to the community, with the ability for community members to contact the developers and submit updated information. Possibly at some point include a way to automate this process, maybe through some kind of voting system?
+
+
+
+
+
+Process:
+- Detect if the user is on youtube.com
+(would it be too slow if the extension worked on every listed channel in the recommended feed?)
+- Detect the channel/video currently being 
+- Search a database of PE owned channels
+- Display info-text in a non-intrusive section of the page (near the channel name?), (or if not in data base a lower-contrast text boxing saying "channel not found in database, probably independent" or something like that)
+- Show detailed ownership info:
+    * PE firm name
+    * % ownership -> partial/full ownership -> DNE (if not known, move down the list)
+    * Date of acquisition
+    * link for more information (including information sources and who's invested in the PE firm if known)
+
+Also provide a way for community members to submit updates, corrections, or new entries
+
+Provide a disclaimer: data is publicly sourced and incomplete by nature

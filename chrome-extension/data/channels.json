@@ -1,0 +1,20 @@
+[
+    {
+    "channel_id": "UC-XXXXXXXXXXXXXXXXXXXXXX",
+    "channel_name": "ExampleChannel",
+    "owner": "Example PE Company",
+    "ownership_type": "Full",
+    "acquisition_date": "2023-05-01",
+    "source_url": "https://example.com/data/UC-XXXXXXXXXXXXXXXXXXXXXX",
+    "notes": ""
+    },
+    {
+    "channel_id": "UCX6OQ3DkcsbYNE6H8uQQuVA",
+    "channel_name": "MrBeast",
+    "owner": "Beast Industries",
+    "ownership_type": "Full",
+    "acquisition_date": "2012",
+    "source_url": "https://www.crunchbase.com/organization/mr-beast",
+    "notes": "Beast Industries is the holding company created by Jimmy \"MrBeast\" Donaldson to manage and expand his diverse business ventures."
+    }
+]

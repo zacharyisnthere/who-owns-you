@@ -1,0 +1,13 @@
+{
+    "company_name": "Example Company",
+    "portfolio": ["examplechannel1", "examplechannel2", "examplechannel3"],
+    "owners": {
+        "PE firm 1": {
+            "ownership_type": "Partial"
+        },
+        "PE firm 2": {
+            "ownership_type": "Partial"
+        }
+    },
+    "notes": ""
+}
