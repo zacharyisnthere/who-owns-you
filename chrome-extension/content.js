@@ -20,17 +20,15 @@ async function searchChannelDatabase(query) {
   const db = await loadChannelDatabase();
   const normalized = query.trim().toLowerCase();
 
-  // Try id first, the ? operator checks to see if channel_id is null before running .toLowerCase()
-  let match = db.find(c => c.channel_id?.toLowerCase() === normalized);
   
-  // Then try name
-  if (!match) {
-    match = db.find(c => c.channel_name?.toLowerCase() === normalized);
-  }
 
-  // Then try tag/handle
-  if (!match) {
-    match = db.find(c => c.channel_tag?.toLowerCase() === normalized);
+  // ? operator checks to see if channel_id is null before running .toLowerCase()
+  const fields = ["channel_id", "channel_name", "channel_tag"];
+  let match = null;
+
+  for (const field of fields) {
+    match = db.find(c => c[field]?.toLowerCase() === normalized);
+    if (match) break;
   }
 
   if (match) {
@@ -39,7 +37,6 @@ async function searchChannelDatabase(query) {
     console.log("No match found for:", query);
   }
 }
-
 
 function getChannelFromVideoPage() {
   const channelLink = document.querySelector('ytd-video-owner-renderer a');
