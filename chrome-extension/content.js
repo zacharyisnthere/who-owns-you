@@ -34,7 +34,7 @@ async function searchChannelDatabase(query) {
   if (match) {
     console.log("Match found:", match);
   } else {
-    console.warn("No match found for:", query);
+    console.log("No match found for:", query);
   }
 }
 
@@ -46,23 +46,23 @@ function getChannelFromURL() {
   //match /channel/UC... pattern
   const channelMatch = url.match(/\/channel\/([a-zA-Z0-9_-]+)/);
   if (channelMatch) {
-    console.log("Matched /channel/ URL");
+    console.log("✅ Matched /channel/ URL");
     return { type: "id", value: channelMatch[1] };
   }
   // Match @username pattern
   const handleMatch = url.match(/\/@([a-zA-Z0-9_-]+)/);
   if (handleMatch) {
-    console.log("Matched @handle URL");
+    console.log("✅ Matched @handle URL");
     return { type: "handle", value: handleMatch[1] };
   }
   // Match /c/CustomName
   const customMatch = url.match(/\/c\/([a-zA-Z0-9_-]+)/);
   if (customMatch) {
-    console.log("Matched /c/CustomeName URL");
+    console.log("✅ Matched /c/CustomeName URL");
     return { type: "custom", value: customMatch[1] };
   }
 
-  console.log("No match found in getChannelIdentifier");
+  console.log("⚠️ No match found in getChannelIdentifier");
   return null;
 }
 
@@ -71,7 +71,7 @@ function getChannelFromVideoPage() {
 
   if (channelLink && channelLink.href) {
     const url = channelLink.href;
-    console.log("Found channel URL from DOM:", url);
+    console.log("✅ Found channel URL from DOM:", url);
 
     // Match from the path only
     const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
@@ -91,24 +91,24 @@ async function checkCurrentChannel() {
   //check via url
   const id = getChannelFromURL();
   if (id) {
-    console.log("Found channel from URL: ", id);
+    console.log("✅ Found channel from URL: ", id);
     await searchChannelDatabase(id.value);
     return;
   } else {
-    console.log("No channel from URL");
+    console.log("⚠️ No channel from URL");
   }
 
   //check via dom
   const id2 = getChannelFromVideoPage();
   if (id2) {
-    console.log("Found channel from DOM: ", id2);
+    console.log("✅ Found channel from DOM: ", id2);
     await searchChannelDatabase(id2.name);
     return;
   } else {
-    console.log("No channel from DOM");
+    console.log("⚠️ No channel from DOM");
   }
 
-  console.warn("Channel data not found from URL or DOM, returned null");
+  console.log("🚫 Channel data not found from URL or DOM, returned null");
 }
 
 
@@ -131,14 +131,17 @@ observer.observe(document, { subtree: true, childList: true });
 let polling = false;
 
 function waitForChannelElement() {
-  if (polling) return;
-  polling = true;
+  if (polling) {
+    console.log("new polling attempted, cancelled");
+    return;
+  }
+    polling = true;
 
   function poll() {
     const channelLink = document.querySelector('ytd-video-owner-renderer a');
     if (channelLink) {
       polling = false;
-      checkCurrentChannel();
+      setTimeout(checkCurrentChannel, 5000);
     } else {
       requestAnimationFrame(poll);
     }

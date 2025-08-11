@@ -2,7 +2,6 @@ Design Doc:
 
 A browser extension that shows which youtube channels are owned by private equity.
 
-Equitube?
 Who Owns You
 
 
@@ -21,6 +20,11 @@ The app should have an obvious disclaimer about the information it runs off of, 
 The app should have the entire database be accessible to the community, with the ability for community members to contact the developers and submit updated information. Possibly at some point include a way to automate this process, maybe through some kind of voting system?
 
 
+
+Color Scheme:
+5BDED2 - blue, owned by privat equity
+7CBF69 - kind of sage green, probably not owned
+0F0F0F - YT bg1 dark mode color, text color
 
 
 
