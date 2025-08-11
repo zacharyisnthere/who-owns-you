@@ -28,7 +28,7 @@ async function searchChannelDatabase(query) {
 
   for (const field of fields) {
     match = db.find(c => { 
-      console.log("checking: ", c[field]?.toLowerCase());
+      // console.log("checking: ", c[field]?.toLowerCase());
       String(c?.[field] ?? "").trim().toLowerCase() === normalized
   });
     if (match) break;
