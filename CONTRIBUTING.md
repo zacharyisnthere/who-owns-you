@@ -2,8 +2,6 @@
 
 Thanks for helping improve this extension. This guide explains how to propose code changes and contribute ownership data safely and consistently.
 
-> By participating, you agree to follow the [Code of Conduct]([MIT](https://github.com/zacharyisnthere/who-owns-you/blob/main/CODE_OF_CONDUCT.md).
-
 ---
 
 ## 1) What we accept
