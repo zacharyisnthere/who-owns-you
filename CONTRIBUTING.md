@@ -53,7 +53,7 @@ Provide exact YouTube URLs (e.g., `/watch?v=...`, `/@handle`, `/channel/UC...`).
 
 - **MV3 only**. Keep permissions minimal.
 - Use stable DOM selectors (`ytd-watch-metadata`, `#above-the-fold`) instead of brittle class chains.
-- Ensure `injectBadge()` is idempotent (no duplicate badges).
+- Ensure `displayData()` is idempotent (no duplicate badges).
 - No analytics, tracking, or remote fetches—lookups must be from packaged JSON.
 
 ---
