@@ -1,4 +1,4 @@
-console.log("Is content.js running?");
+console.log("'Who Owns You' browser extension is running!");
 
 // Load the JSON file
 async function loadChannelDatabase() {
@@ -18,16 +18,19 @@ async function loadChannelDatabase() {
 // Search by channelid or channel name or channel handle (case-insensitive)
 async function searchChannelDatabase(query) {
   const db = await loadChannelDatabase();
-  const normalized = query.trim().toLowerCase();
+  const normalized = String(query ?? "").trim().toLowerCase();
 
   
 
   // ? operator checks to see if channel_id is null before running .toLowerCase()
-  const fields = ["channel_id", "channel_name", "channel_tag"];
   let match = null;
+  const fields = ["channel_id", "channel_name", "channel_tag"];
 
   for (const field of fields) {
-    match = db.find(c => c[field]?.toLowerCase() === normalized);
+    match = db.find(c => { 
+      console.log("checking: ", c[field]?.toLowerCase());
+      String(c?.[field] ?? "").trim().toLowerCase() === normalized
+  });
     if (match) break;
   }
 
@@ -35,34 +38,34 @@ async function searchChannelDatabase(query) {
     console.log("Match found:", match);
   } else {
     console.log("No match found for:", query);
+    // console.log("Normalized query:", normalized);
   }
 }
 
 
-function getChannelFromURL() {
-  const url = window.location.href;
+function getChannelFromURL(url) {
   console.log("getChannelIdentifier: current URL =", url);
 
   //match /channel/UC... pattern
   const channelMatch = url.match(/\/channel\/([a-zA-Z0-9_-]+)/);
   if (channelMatch) {
-    console.log("✅ Matched /channel/ URL");
+    console.log("Matched /channel/ URL");
     return { type: "id", value: channelMatch[1] };
   }
   // Match @username pattern
   const handleMatch = url.match(/\/@([a-zA-Z0-9_-]+)/);
   if (handleMatch) {
-    console.log("✅ Matched @handle URL");
+    console.log("Matched @handle URL");
     return { type: "handle", value: handleMatch[1] };
   }
   // Match /c/CustomName
   const customMatch = url.match(/\/c\/([a-zA-Z0-9_-]+)/);
   if (customMatch) {
-    console.log("✅ Matched /c/CustomeName URL");
+    console.log("Matched /c/CustomeName URL");
     return { type: "custom", value: customMatch[1] };
   }
 
-  console.log("⚠️ No match found in getChannelIdentifier");
+  console.log("⚠️ No match found from ", url);
   return null;
 }
 
@@ -71,13 +74,11 @@ function getChannelFromVideoPage() {
 
   if (channelLink && channelLink.href) {
     const url = channelLink.href;
-    console.log("✅ Found channel URL from DOM:", url);
+    console.log("Found channel URL from DOM:", url);
 
     // Match from the path only
-    const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      return { name: match[1], url };
-    }
+    // const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
+    return getChannelFromURL(url);
   }
 
   return null;
@@ -89,7 +90,7 @@ async function checkCurrentChannel() {
   console.log("Checking for channel info...");
 
   //check via url
-  const id = getChannelFromURL();
+  const id = getChannelFromURL(window.location.href);
   if (id) {
     console.log("✅ Found channel from URL: ", id);
     await searchChannelDatabase(id.value);
@@ -102,7 +103,7 @@ async function checkCurrentChannel() {
   const id2 = getChannelFromVideoPage();
   if (id2) {
     console.log("✅ Found channel from DOM: ", id2);
-    await searchChannelDatabase(id2.name);
+    await searchChannelDatabase(id2.value);
     return;
   } else {
     console.log("⚠️ No channel from DOM");

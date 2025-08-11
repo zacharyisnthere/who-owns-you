@@ -51,8 +51,8 @@ The JSON Library should look like this: (note that the source_url variable can b
 {
     "channel_id": "UC-XXXXXXXXXXXXXXXXXXXXXX",
     "channel_name": "ExampleChannel",
-    "channel-tag": "examplehandle",
-    "channel-url": "https://youtube.com/EXAMPLECHANNEL",
+    "channel_tag": "examplehandle",
+    "channel_url": "https://youtube.com/EXAMPLECHANNEL",
     "owner": "Example PE Company",
     "ownership_type": "Full",
     "acquisition_date": "2023-05-01",
