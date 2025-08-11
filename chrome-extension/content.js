@@ -34,29 +34,12 @@ async function searchChannelDatabase(query) {
   if (match) {
     console.log("Match found:", match);
   } else {
-    console.log("No match found for:", query);
+    console.warn("No match found for:", query);
   }
 }
 
-function getChannelFromVideoPage() {
-  const channelLink = document.querySelector('ytd-video-owner-renderer a');
 
-  if (channelLink && channelLink.href) {
-    const url = channelLink.href;
-    console.log("Found channel URL from DOM:", url);
-
-    // Match from the path only
-    const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      return { name: match[1], url };
-    }
-  }
-
-  return null;
-}
-
-
-function getChannelIdentifier() {
+function getChannelFromURL() {
   const url = window.location.href;
   console.log("getChannelIdentifier: current URL =", url);
 
@@ -79,17 +62,34 @@ function getChannelIdentifier() {
     return { type: "custom", value: customMatch[1] };
   }
 
-  console.warn("No match found in getChannelIdentifier");
+  console.log("No match found in getChannelIdentifier");
   return null;
 }
 
+function getChannelFromVideoPage() {
+  const channelLink = document.querySelector('ytd-video-owner-renderer a');
+
+  if (channelLink && channelLink.href) {
+    const url = channelLink.href;
+    console.log("Found channel URL from DOM:", url);
+
+    // Match from the path only
+    const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      return { name: match[1], url };
+    }
+  }
+
+  return null;
+}
 
 
 //run the detection and search logic
 async function checkCurrentChannel() {
   console.log("Checking for channel info...");
 
-  const id = getChannelIdentifier();
+  //check via url
+  const id = getChannelFromURL();
   if (id) {
     console.log("Found channel from URL: ", id);
     await searchChannelDatabase(id.value);
@@ -98,10 +98,11 @@ async function checkCurrentChannel() {
     console.log("No channel from URL");
   }
 
-  const info = getChannelFromVideoPage();
-  if (info) {
-    console.log("Found channel from DOM: ", info);
-    await searchChannelDatabase(info.name);
+  //check via dom
+  const id2 = getChannelFromVideoPage();
+  if (id2) {
+    console.log("Found channel from DOM: ", id2);
+    await searchChannelDatabase(id2.name);
     return;
   } else {
     console.log("No channel from DOM");
@@ -111,7 +112,6 @@ async function checkCurrentChannel() {
 }
 
 
-
 // MutationObserver for single-page app navigation
 let lastUrl = location.href;
 const observer = new MutationObserver(() => {
@@ -119,11 +119,40 @@ const observer = new MutationObserver(() => {
   if (currentUrl !== lastUrl) {
     lastUrl = currentUrl;
     console.log("🔄 URL changed:", currentUrl);
-    setTimeout(checkCurrentChannel, 1000); // small delay to wait for new DOM
+    waitForChannelElement(); // small delay to wait for new DOM
   }
 });
 
-observer.observe(document, { subtree: true, childList: true });
+observer.observe(document, { subtree: true, childList: true }); 
 
-// Initial run
-setTimeout(checkCurrentChannel, 1000); //just waits for 1000ms, could change to polling the DOM but this works for now.
+
+//
+
+let polling = false;
+
+function waitForChannelElement() {
+  if (polling) return;
+  polling = true;
+
+  function poll() {
+    const channelLink = document.querySelector('ytd-video-owner-renderer a');
+    if (channelLink) {
+      polling = false;
+      checkCurrentChannel();
+    } else {
+      requestAnimationFrame(poll);
+    }
+  }
+
+  poll();
+}
+
+// initial call on page load
+waitForChannelElement();
+
+
+// setTimeout(checkCurrentChannel, 1000); //just waits for 1000ms, could change to polling the DOM but this works for now.
+/*In fact, I need to change this to polling to the dom.
+* There's a bug right now where the search fails if I open a video from the search page, but still works on reloading or opening it from a different page. 
+* Theory rn is that the load times from the search page are longer than 1000, so when checkCurrentChannel is called it fails.
+*/
