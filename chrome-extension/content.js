@@ -1,6 +1,8 @@
 console.log("'Who Owns You' browser extension is running!");
 
 
+
+
 // Call this with either a matched data object or null/undefined
 // e.g. displayData(match)
 
@@ -10,9 +12,33 @@ const CARD_ID = 'woy-info-card';
 async function displayData(data) {
   console.log("Displaying info box...")
 
+  // First, check to see if the page is a video, channel page, or short
+
+
   // 1) Find insertion point: before the channel row on a watch page
-  const container = document.querySelector('ytd-watch-flexy #above-the-fold');
-  if (!container) return; // not on a standard watch page yet
+
+  let container;
+
+  pageType = getPageType();
+  if (pageType) console.log("Page type identified:", pageType);
+
+  switch (pageType) {
+    case 'video':
+      container = document.querySelector('ytd-watch-flexy #above-the-fold');
+      break;
+    
+    case 'short':
+      container = document.querySelector('yt-reel-metapanel-view-model');
+      break;
+    
+    case 'channel':
+      container = document.querySelector('yt-page-header-renderer');
+      break;
+
+    default:
+      console.warn("Not on a valid page!");
+      return; // not on a standard page yet
+  }
 
   // 2) Avoid duplicates; re-render if it already exists
   // const CARD_ID = 'woy-info-card';
@@ -109,7 +135,7 @@ async function displayData(data) {
     </div>
   `;
 
-  // 6) Insert as the first child of #above-the-fold
+  // 6) Insert box as first child of container
   // ownerRow.parentElement.insertBefore(host, ownerRow);
   container.prepend(host);
 
@@ -156,6 +182,18 @@ async function displayData(data) {
 function clearInfoCard() {
   const el = document.getElementById(CARD_ID);
   if (el) el.remove();
+}
+
+//helper method?
+function getPageType(url = location.href) {
+  const href = String(url);
+  console.log("identifying ", href);
+
+  if (href.includes('/watch?v=')) return 'video';
+  if (href.includes('/shorts/')) return 'short';
+  if (href.includes('/@') || href.includes('/c/') || href.includes('/channel/')) return 'channel';
+
+  return null;
 }
 
 
@@ -205,7 +243,7 @@ async function searchChannelDatabase(query) {
 }
 
 
-function getChannelFromURL(url) {
+function getChannelFromURL(url=location.href) {
   console.log("getChannelIdentifier: current URL =", url);
 
   //match /channel/UC... pattern
@@ -231,6 +269,18 @@ function getChannelFromURL(url) {
   return null;
 }
 
+function getChannelFromShortPage() {
+  const channelLink = document.querySelector('yt-reel-channel-bar-view-model a');
+
+  if (channelLink && channelLink.href) {
+    const url = channelLink.href;
+    console.log("Found channel URL from DOM:", url);
+    return getChannelFromURL(url);
+  }
+
+  return null;
+}
+
 function getChannelFromVideoPage() {
   const channelLink = document.querySelector('ytd-video-owner-renderer a');
 
@@ -250,28 +300,62 @@ function getChannelFromVideoPage() {
 //run the detection and search logic
 async function checkCurrentChannel() {
   console.log("Checking for channel info...");
+  let pageType = getPageType();
+  console.log("Page type identified:", pageType);
 
-  //check via url
-  const id = getChannelFromURL(window.location.href);
-  if (id) {
-    console.log("✅ Found channel from URL: ", id);
-    await searchChannelDatabase(id.value);
-    return;
-  } else {
-    console.log("⚠️ No channel from URL");
+  switch (getPageType()){
+    case 'video': {
+      const id = getChannelFromVideoPage();
+      if (id) {
+        console.log("✅ Found channel from video page: ", id);
+        await searchChannelDatabase(id.value);
+      }
+      else console.error("⚠️ something went wrong!");
+      break;
+    }
+    case 'short': {
+      const id = getChannelFromShortPage();//NOT A THING YET, TODOOO
+      if (id) {
+        console.log("✅ Found channel from short page: ", id);
+        await searchChannelDatabase(id.value);
+      }
+      else console.error("⚠️ something went wrong!");
+      break;
+    }
+    case 'channel': {
+      const id = getChannelFromURL();
+      if (id) {
+        console.log("✅ Found channel from URL: ", id);
+        await searchChannelDatabase(id.value);
+      }
+      else console.error("⚠️ something went wrong!");
+      break;
+    }
+    default:
+      console.log("🚫 Channel data cannot be found from URL or DOM, returned null");
   }
 
-  //check via dom
-  const id2 = getChannelFromVideoPage();
-  if (id2) {
-    console.log("✅ Found channel from DOM: ", id2);
-    await searchChannelDatabase(id2.value);
-    return;
-  } else {
-    console.log("⚠️ No channel from DOM");
-  }
+  // //check via url
+  // const id = getChannelFromURL();
+  // if (id) {
+  //   console.log("✅ Found channel from URL: ", id);
+  //   await searchChannelDatabase(id.value);
+  //   return;
+  // } else {
+  //   console.log("⚠️ No channel from URL");
+  // }
 
-  console.log("🚫 Channel data not found from URL or DOM, returned null");
+  // //check via dom
+  // const id2 = getChannelFromVideoPage();
+  // if (id2) {
+  //   console.log("✅ Found channel from DOM: ", id2);
+  //   await searchChannelDatabase(id2.value);
+  //   return;
+  // } else {
+  //   console.log("⚠️ No channel from DOM");
+  // }
+
+  // console.log("🚫 Channel data not found from URL or DOM, returned null");
 }
 
 
@@ -305,7 +389,7 @@ function waitForChannelElement() {
     const channelLink = document.querySelector('ytd-video-owner-renderer a');
     if (channelLink) {
       polling = false;
-      setTimeout(checkCurrentChannel, 4000); // small delay to wait for new DOM
+      setTimeout(checkCurrentChannel, 3000); // small delay to wait for new DOM
     } else {
       requestAnimationFrame(poll);
     }
