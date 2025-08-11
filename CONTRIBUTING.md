@@ -54,7 +54,6 @@ Provide exact YouTube URLs (e.g., `/watch?v=...`, `/@handle`, `/channel/UC...`).
 - **MV3 only**. Keep permissions minimal.
 - Use stable DOM selectors (`ytd-watch-metadata`, `#above-the-fold`) instead of brittle class chains.
 - Ensure `displayData()` is idempotent (no duplicate badges).
-- No analytics, tracking, or remote fetches—lookups must be from packaged JSON.
 
 ---
 
@@ -79,7 +78,7 @@ Each `channels.json` entry must follow this format:
 Rules:
 - Use accurate `channel_id` (24 characters, starts with UC).
 - Include at least one public, verifiable `source_url`.
-- Keep `notes` to one clear sentence—no dollar amounts.
+- Keep `notes` to one clear sentence.
 
 ---
 
