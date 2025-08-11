@@ -128,10 +128,6 @@ async function displayData(data) {
       </div>
 
       <div class="notes">${notes ? escapeHtml(notes) : '<span class="muted">No notes available.</span>'}</div>
-
-      <div class="links">
-        ${renderSources(sources)}
-      </div>
     </div>
   `;
 
