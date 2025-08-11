@@ -484,14 +484,14 @@
     "channel_id": "UC_-hYjoNe4PJNFa9iZ4lraA",
     "channel_name": "Good Work",
     "channel_tag": "goodworkmb",
-    "channel_url": "https://youtube.com/@GoodWork",
+    "channel_url": "https://www.youtube.com/channel/UC_-hYjoNe4PJNFa9iZ4lraA",
     "owner": "Morning Brew Inc.",
     "ownership_type": "Full",
     "acquisition_date": "2017-10-26",
     "source_url": [
-        "https://example.com/data/UC_-hYjoNe4PJNFa9iZ4lraA"
+      "https://example.com/data/UC_-hYjoNe4PJNFa9iZ4lraA"
     ],
     "notes": "Morning Brew Inc. started the Good Work YouTube channel in October 2017"
-}
-  
+  }
+    
 ]

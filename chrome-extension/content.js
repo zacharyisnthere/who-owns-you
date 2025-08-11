@@ -1,5 +1,12 @@
 console.log("'Who Owns You' browser extension is running!");
 
+
+function displayData() {
+  console.log("Display Data!");
+}
+
+
+
 // Load the JSON file
 async function loadChannelDatabase() {
   console.log("Loading channels.json...");
@@ -29,13 +36,14 @@ async function searchChannelDatabase(query) {
   for (const field of fields) {
     match = db.find(c => { 
       // console.log("checking: ", c[field]?.toLowerCase());
-      String(c?.[field] ?? "").trim().toLowerCase() === normalized
+      return String(c?.[field] ?? "").trim().toLowerCase() === normalized;
   });
     if (match) break;
   }
 
   if (match) {
     console.log("Match found:", match);
+    displayData();
   } else {
     console.log("No match found for:", query);
     // console.log("Normalized query:", normalized);
