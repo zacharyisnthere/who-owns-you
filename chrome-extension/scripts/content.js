@@ -1,503 +1,373 @@
 console.log("'Who Owns You' browser extension is running!");
 
+// ===== Enable/Disable infrastructure =====
+const KEY = "woy_enabled"; // storage key
 
-// Enable/Disable functionality=======
-//config / keys
-const KEY = "woy_enabled";
-
-//controller state
 const WOY = {
   enabled: false,
-  observer: null,
+  lastSeq: 0,
+  observer: null,          // legacy single observer slot (safe to keep)
+  observers: new Set(),    // track all observers we create
   intervals: new Set(),
+  timeouts: new Set(),
   cleanups: new Set()
 };
 
-//Utility: register a cleanup func to run on disable()
+// Register a cleanup fn to run on disable()
 function onCleanup(fn) {
-  WOY.cleanups.add(fn); 
+  WOY.cleanups.add(fn);
   return fn;
 }
 
-//clear all timers/obersevers/ui when disabling
+// Clear all timers/observers/UI when disabling
 function runCleanup() {
-  //stop intervals/timeouts
+  // stop intervals/timeouts
   for (const id of WOY.intervals) clearInterval(id);
   WOY.intervals.clear();
 
-  //disconnect observers
-  if (WOY.observer) { 
+  for (const id of WOY.timeouts) clearTimeout(id);
+  WOY.timeouts.clear();
+
+  // disconnect observers
+  if (WOY.observer) {
     WOY.observer.disconnect();
     WOY.observer = null;
   }
-
-  //remove injected UI
-  document.querySelectorAll(".woy-badge, .woy-panel").forEach(n => n.remove());
-
-  //run any extra cleanups registered
-  for (const fn of WOY.cleanups) {
-    try { fn(); } catch{}
+  for (const mo of WOY.observers) {
+    try { mo.disconnect?.(); } catch (_) {}
   }
+  WOY.observers.clear();
 
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  // remove injected UI
+  document.getElementById('woy-badge')?.remove();
+
+  // run custom cleanups
+  for (const fn of WOY.cleanups) {
+    try { fn(); } catch (e) { console.warn('[WOY] cleanup error', e); }
+  }
   WOY.cleanups.clear();
 }
 
+// ===== Boot =====
+init().catch(console.error);
 
-//storage helpers
-function getEnabled() {
-  return new Promise(resolve => {
-    chrome.storage.sync.get([KEY], (res) => resolve(Boolean(res?.[KEY])));
+async function init() {
+  const { [KEY]: enabled = false, woy_seq = 0 } = await chrome.storage.local.get([KEY, 'woy_seq']);
+  applyEnabled(!!enabled, Number(woy_seq) || 0, 'init');
+
+  // Instant flip for the active tab
+  chrome.runtime.onMessage.addListener((m) => {
+    if (m?.type === 'woy:setEnabled') {
+      applyEnabled(!!m.value, Number(m.seq) || 0, 'message');
+    }
+  });
+
+  // Cross-tab/state sync
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    const has = Object.prototype.hasOwnProperty.bind(changes);
+    if (has(KEY) || has('woy_seq')) {
+      const next = has(KEY) ? !!changes[KEY].newValue : WOY.enabled;
+      const seq  = has('woy_seq') ? Number(changes.woy_seq.newValue) : WOY.lastSeq;
+      applyEnabled(next, seq, 'storage');
+    }
   });
 }
 
+function applyEnabled(next, seq, source) {
+  // Ignore stale events (e.g., ON then OFF fast)
+  if (seq < WOY.lastSeq) return;
+  WOY.lastSeq = seq;
 
+  // No-op if state unchanged
+  if (next === WOY.enabled) return;
+  WOY.enabled = next;
 
-//==enable/disable==
-async function enable() {
-  if (WOY.enabled) return;
-  WOY.enabled = true;
+  if (next) enable();
+  else disable();
+}
 
-  // startup logic (load DB, inject UI, etc.)
-  await startOwnershipChecks(); 
+function enable() {
+  // Always start from a clean slate
+  runCleanup();
 
-
-  //SPA URL-change observer (YouTube navigation)
-  let lastUrl = location.href;
-  const obs = new MutationObserver(() => {
-    if (!WOY.enabled) return;
-    const currentUrl = location.href;
-    if (currentUrl !== lastUrl) {
-      lastUrl = currentUrl;
-      console.log("🔄 URL changed:", currentUrl);
-      clearInfoCard();
-      waitForChannelElement(); // will be gated
-    }
-  });
-  obs.observe(document, { childList: true, subtree: true });
-  WOY.observer = obs;
-
-  // initial pass per current page
-  clearInfoCard();
-  waitForChannelElement();
+  // Start SPA hooks and do first injection + data check
+  startSpaHooks();
+  maybeInjectForCurrentPage();
+  checkCurrentChannel();
 
   console.log("[WOY] ENABLED");
 }
 
 function disable() {
-  if (!WOY.enabled) return;
-  WOY.enabled = false;
   runCleanup();
   console.log("[WOY] DISABLED");
 }
 
+// ===== YouTube SPA handling =====
+function startSpaHooks() {
+  const recheck = debounce(() => {
+    if (!WOY.enabled) return;
+    // remove stale UI (idempotent) then reinject & refresh data
+    document.getElementById('woy-badge')?.remove();
+    maybeInjectForCurrentPage();
+    checkCurrentChannel();
+  }, 200);
 
-//===wiring to popup toggle====
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "WOY_TOGGLE") {
-    msg.enabled ? enable() : disable();
-  }
-});
+  // YouTube events (best if present)
+  const onNav = () => recheck();
+  document.addEventListener('yt-navigate-finish', onNav, true);
+  document.addEventListener('yt-page-data-updated', onNav, true);
+  onCleanup(() => {
+    document.removeEventListener('yt-navigate-finish', onNav, true);
+    document.removeEventListener('yt-page-data-updated', onNav, true);
+  });
 
-// Initial state when the content script loads on a page
-(async () => {
-  const on = await getEnabled();
-  on ? enable() : disable();
-})();
+  // Fallback: URL-compare MutationObserver
+  let lastHref = location.href;
+  const mo = new MutationObserver(() => {
+    if (location.href !== lastHref) {
+      lastHref = location.href;
+      recheck();
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+  WOY.observers.add(mo);
+  onCleanup(() => { try { mo.disconnect(); } catch(_){} WOY.observers.delete(mo); });
 
-//Feature logic TODOOOOO
-let recheckTimer = null;
-function scheduleRecheck() {
-  if (recheckTimer) return;
-  recheckTimer = setTimeout(() => {
-    recheckTimer = null;
-    if (WOY.enabled) checkCurrentChannel();
-  }, 1000);
-  WOY.intervals.add(recheckTimer);
-  onCleanup(() => { clearTimeout(recheckTimer); recheckTimer = null});
+  // Wake up when tab becomes visible (BFCache, detach/attach)
+  const onVis = () => { if (!document.hidden) recheck(); };
+  document.addEventListener('visibilitychange', onVis, true);
+  onCleanup(() => document.removeEventListener('visibilitychange', onVis, true));
 }
 
-async function startOwnershipChecks() {
-  // Example: load DB once and keep reference, with cleanup if needed
-  const abort = new AbortController();
-  onCleanup(() => abort.abort());
-
-  await loadChannelDatabase({ signal: abort.signal }); // adapt your loader to accept signal
-
-  // Initial pass
-  await checkCurrentChannel();
-
-  // If you have any periodic polling, keep track of it
-  // const id = setInterval(() => WOY.enabled && checkCurrentChannel(), 10_000);
-  // WOY.intervals.add(id);
+// ===== Page type & placement =====
+function getPageType() {
+  const p = location.pathname;
+  if (p.startsWith('/watch')) return 'watch';
+  if (p.startsWith('/shorts/')) return 'shorts';
+  if (p.startsWith('/@') || p.startsWith('/c/') || p.startsWith('/channel/')) return 'channel';
+  return 'other';
 }
 
-
-// Call this with either a matched data object or null/undefined
-// e.g. displayData(match)
-
-
-const CARD_ID = 'woy-info-card';
-
-async function displayData(data) {
-  if (!WOY.enabled) return;
-
-  console.log("Displaying info box...")
-
-  // First, check to see if the page is a video, channel page, or short
-
-
-  // 1) Find insertion point: before the channel row on a watch page
-
-  let container;
-
-  pageType = getPageType();
-  if (pageType) console.log("Page type identified:", pageType);
-
-  switch (pageType) {
-    case 'video':
-      container = document.querySelector('ytd-watch-flexy #above-the-fold');
-      break;
-    
-    case 'short':
-      container = document.querySelector('yt-reel-metapanel-view-model');
-      break;
-    
-    case 'channel':
-      container = document.querySelector('yt-page-header-renderer');
-      break;
-
-    default:
-      console.warn("Not on a valid page!");
-      return; // not on a standard page yet
+function maybeInjectForCurrentPage() {
+  const type = getPageType();
+  if (type !== 'watch') {
+    document.getElementById('woy-badge')?.remove();
+    return;
   }
 
-  // 2) Avoid duplicates; re-render if it already exists
-  // const CARD_ID = 'woy-info-card';
-  const existing = container.querySelector('#' + CARD_ID);
-  if (existing) existing.remove();
-
-  // 3) Build card container with Shadow DOM (prevents YT CSS conflicts)
-  const host = document.createElement('div');
-  host.id = CARD_ID;
-  host.setAttribute('style', 'display:block;margin:12px 0 16px 0;');
-  const shadow = host.attachShadow({ mode: 'open' });
-
-  // 4) Data guards + formatting
-  const hasData = !!data && typeof data === 'object';
-  const owner = hasData && (data.owner || 'Unknown owner');
-  const type = hasData && (data.ownership_type || 'Unknown');
-  const acq = hasData && (data.acquisition_date ? formatAcq(data.acquisition_date) : '—');
-  const notes = hasData && (data.notes || '');
-  const sources = hasData && Array.isArray(data.source_url) ? data.source_url : [];
-
-  // 5) Render
-  shadow.innerHTML = `
-    <style>
-      :host {
-        all: initial;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      }
-      .card {
-        display: grid;
-        gap: 8px;
-        padding: 12px 14px;
-        border: 1px solid rgba(140,140,140,.3);
-        background: rgba(250,250,250,.9);
-        color: #111;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,.06);
-      }
-      .row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .pill {
-        font-size: 12px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-weight: 600;
-        letter-spacing: .2px;
-        border: 1px solid rgba(0,0,0,.08);
-      }
-      .pill.full { background:#e6f5ec; }
-      .pill.partial { background:#eef3ff; }
-      .pill.unknown { background:#f5f5f5; }
-      .owner {
-        font-weight: 700;
-        font-size: 14px;
-      }
-      .meta {
-        font-size: 12.5px;
-        opacity: .8;
-      }
-      .notes {
-        font-size: 13px;
-        line-height: 1.35;
-      }
-      .links a {
-        font-size: 12.5px;
-        text-decoration: none;
-        border-bottom: 1px dotted currentColor;
-      }
-      .muted { opacity:.7 }
-      @media (prefers-color-scheme: dark) {
-        .card { background: rgba(28,28,28,.85); color: #f1f1f1; border-color: rgba(255,255,255,.12); }
-        .pill { border-color: rgba(255,255,255,.12); }
-        .pill.full { background:#133019; }
-        .pill.partial { background:#1a253d; }
-        .pill.unknown { background:#2a2a2a; }
-      }
-    </style>
-
-    <div class="card" role="region" aria-label="Channel ownership information">
-      <div class="row">
-        <span class="pill ${pillClass(type)}">${labelType(type)}</span>
-        <span class="owner">${escapeHtml(owner)}</span>
-        <span class="meta muted">Acquired: ${escapeHtml(acq)}</span>
-      </div>
-
-      <div class="notes">${notes ? escapeHtml(notes) : '<span class="muted">No notes available.</span>'}</div>
-    </div>
-  `;
-
-  // 6) Insert box as first child of container
-  // ownerRow.parentElement.insertBefore(host, ownerRow);
-  container.prepend(host);
-
-  console.log("Data displayed: ", host);
-
-  // ---- helpers ----
-  function pillClass(t) {
-    const k = String(t || '').toLowerCase();
-    if (k.includes('full')) return 'full';
-    if (k.includes('partial') || k.includes('minority') || k.includes('majority')) return 'partial';
-    return 'unknown';
-  }
-  function labelType(t) {
-    return (t && String(t).trim()) ? t : 'Ownership';
-  }
-  function formatAcq(s) {
-    // Accepts "YYYY-MM-DD", "YYYY-MM-00", "YYYY-00-00", "YYYY"
-    const parts = String(s).split('-');
-    const [y, m, d] = [parts[0], parts[1], parts[2]];
-    if (!y || y === '0000') return '—';
-    if (!m || m === '00') return y;
-    const month = ({
-      '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun',
-      '07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'
-    })[m] || m;
-    return `${month} ${y}`;
-  }
-  function renderSources(urls) {
-    if (!urls || !urls.length) return '<span class="muted">No public source listed.</span>';
-    return urls.map((u, i) =>
-      `<a href="${escapeAttr(u)}" target="_blank" rel="noopener noreferrer">Source ${i+1}</a>`
-    ).join(' &middot; ');
-  }
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-  function escapeAttr(str) {
-    return String(str).replace(/"/g, '&quot;');
-  }
+  waitForElement('#above-the-fold', 5000)
+    .then(container => {
+      document.getElementById('woy-badge')?.remove(); // prevent dupes
+      injectBadge(container);
+    })
+    .catch(() => {
+      // No target yet; harmless—SPA hooks will retry on next nav/dom change
+    });
 }
 
-function clearInfoCard() {
-  const el = document.getElementById(CARD_ID);
-  if (el) el.remove();
+function waitForElement(selector, timeout = 5000) {
+  const el = document.querySelector(selector);
+  if (el) return Promise.resolve(el);
+
+  return new Promise((resolve, reject) => {
+    const mo = new MutationObserver(() => {
+      const found = document.querySelector(selector);
+      if (found) { mo.disconnect(); resolve(found); }
+    });
+    mo.observe(document, { childList: true, subtree: true });
+
+    const to = setTimeout(() => { mo.disconnect(); reject(new Error('timeout')); }, timeout);
+    WOY.timeouts.add(to);
+    onCleanup(() => clearTimeout(to));
+  });
 }
 
-//helper method?
-function getPageType(url = location.href) {
-  const href = String(url);
-  console.log("identifying ", href);
-
-  if (href.includes('/watch?v=')) return 'video';
-  if (href.includes('/shorts/')) return 'short';
-  if (href.includes('/@') || href.includes('/c/') || href.includes('/channel/')) return 'channel';
-
-  return null;
+function debounce(fn, ms) {
+  let id;
+  return (...args) => {
+    clearTimeout(id);
+    id = setTimeout(() => fn(...args), ms);
+  };
 }
 
-
-
-// Load the JSON file
+// ===== Data loading & search =====
 let CHANNEL_DB = null;
 
 async function loadChannelDatabase() {
-  console.log("Loading channels.json...");
-  if (CHANNEL_DB) return CHANNEL_DB; //don't need to reload channels.json if it's already cached
+  // IMPORTANT: if your file lives at project root, change to "channels.json"
+  const url = chrome.runtime.getURL("data/channels.json");
+  console.log("[WOY] Loading channels:", url);
 
-  const response = await fetch(chrome.runtime.getURL("data/channels.json"));
+  if (CHANNEL_DB) return CHANNEL_DB;
+
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (e) {
+    console.error("[WOY] Fetch failed:", e);
+    return (CHANNEL_DB = []);
+  }
 
   if (!response.ok) {
-    console.error("Failed to load JSON:", response.statusText);
-    return [];
+    console.error("[WOY] Failed to load channels.json:", response.status, response.statusText);
+    return (CHANNEL_DB = []);
   }
 
   CHANNEL_DB = await response.json();
-  console.log("Loaded channel databse:", CHANNEL_DB);
+  console.log("[WOY] Loaded channel database:", CHANNEL_DB?.length ?? 0, "records");
   return CHANNEL_DB;
 }
 
-
-// Search by channelid or channel name or channel handle (case-insensitive)
+// Search by channel_id, channel_name, or channel_tag (case-insensitive)
 async function searchChannelDatabase(query) {
   const db = await loadChannelDatabase();
   const normalized = String(query ?? "").trim().toLowerCase();
 
-  
-
-  // ? operator checks to see if channel_id is null before running .toLowerCase()
   let match = null;
   const fields = ["channel_id", "channel_name", "channel_tag"];
 
   for (const field of fields) {
-    match = db.find(c => { 
-      // console.log("checking: ", c[field]?.toLowerCase());
-      return String(c?.[field] ?? "").trim().toLowerCase() === normalized;
-  });
+    match = db.find(c => String(c?.[field] ?? "").trim().toLowerCase() === normalized);
     if (match) break;
   }
 
   if (match) {
-    console.log("Match found:", match);
-    displayData(match);
+    console.log("[WOY] Match found:", match);
+    renderBadgeContent(match);
   } else {
-    console.log("No match found for:", query);
-    // console.log("Normalized query:", normalized);
+    console.log("[WOY] No match found for:", query);
+    renderBadgeContent(null);
   }
 }
 
-
-function getChannelFromURL(url=location.href) {
-  console.log("getChannelIdentifier: current URL =", url);
-
-  //match /channel/UC... pattern
+// ===== Channel identification helpers =====
+function getChannelFromURL(url = location.href) {
+  // /channel/UC...
   const channelMatch = url.match(/\/channel\/([a-zA-Z0-9_-]+)/);
-  if (channelMatch) {
-    console.log("Matched /channel/ URL");
-    return { type: "id", value: channelMatch[1] };
-  }
-  // Match @username pattern
-  const handleMatch = url.match(/\/@([a-zA-Z0-9_-]+)/);
-  if (handleMatch) {
-    console.log("Matched @handle URL");
-    return { type: "handle", value: handleMatch[1] };
-  }
-  // Match /c/CustomName
-  const customMatch = url.match(/\/c\/([a-zA-Z0-9_-]+)/);
-  if (customMatch) {
-    console.log("Matched /c/CustomeName URL");
-    return { type: "custom", value: customMatch[1] };
-  }
+  if (channelMatch) return { type: "id", value: channelMatch[1] };
 
-  console.log("⚠️ No match found from ", url);
+  // /@handle
+  const handleMatch = url.match(/\/@([a-zA-Z0-9_-]+)/);
+  if (handleMatch) return { type: "handle", value: handleMatch[1] };
+
+  // /c/CustomName
+  const customMatch = url.match(/\/c\/([a-zA-Z0-9_-]+)/);
+  if (customMatch) return { type: "custom", value: customMatch[1] };
+
   return null;
 }
 
 function getChannelFromShortPage() {
   const channelLink = document.querySelector('yt-reel-channel-bar-view-model a');
-
-  if (channelLink && channelLink.href) {
-    const url = channelLink.href;
-    console.log("Found channel URL from DOM:", url);
-    return getChannelFromURL(url);
-  }
-
+  if (channelLink && channelLink.href) return getChannelFromURL(channelLink.href);
   return null;
 }
 
 function getChannelFromVideoPage() {
   const channelLink = document.querySelector('ytd-video-owner-renderer a');
-
-  if (channelLink && channelLink.href) {
-    const url = channelLink.href;
-    console.log("Found channel URL from DOM:", url);
-
-    // Match from the path only
-    // const match = url.match(/youtube\.com\/(?:channel\/|@|c\/)([a-zA-Z0-9_-]+)/);
-    return getChannelFromURL(url);
-  }
-
+  if (channelLink && channelLink.href) return getChannelFromURL(channelLink.href);
   return null;
 }
 
-
-//run the detection and search logic
+// Run detection + search based on current page
 async function checkCurrentChannel() {
   if (!WOY.enabled) return;
 
-  console.log("Checking for channel info...");
-  let pageType = getPageType();
-  console.log("Page type identified:", pageType);
-
-  switch (getPageType()){
-    case 'video': {
+  const pageType = getPageType();
+  switch (pageType) {
+    case 'watch': {
       const id = getChannelFromVideoPage();
-      if (id) {
-        console.log("✅ Found channel from video page: ", id);
-        await searchChannelDatabase(id.value);
-      }
-      else console.error("⚠️ something went wrong!");
+      if (id) await searchChannelDatabase(id.value);
       break;
     }
-    case 'short': {
-      const id = getChannelFromShortPage();//NOT A THING YET, TODOOO
-      if (id) {
-        console.log("✅ Found channel from short page: ", id);
-        await searchChannelDatabase(id.value);
-      }
-      else console.error("⚠️ something went wrong!");
+    case 'shorts': {
+      const id = getChannelFromShortPage();
+      if (id) await searchChannelDatabase(id.value);
       break;
     }
     case 'channel': {
       const id = getChannelFromURL();
-      if (id) {
-        console.log("✅ Found channel from URL: ", id);
-        await searchChannelDatabase(id.value);
-      }
-      else console.error("⚠️ something went wrong!");
+      if (id) await searchChannelDatabase(id.value);
       break;
     }
     default:
-      console.log("🚫 Channel data cannot be found from URL or DOM, returned null");
+      // Not a supported page; ensure UI is absent
+      document.getElementById('woy-badge')?.remove();
   }
 }
 
+// ===== UI injection & rendering =====
+function injectBadge(container) {
+  const el = document.createElement('div');
+  el.id = 'woy-badge';
+  el.style.cssText = [
+    'margin:12px 0',
+    'padding:12px',
+    'border-radius:12px',
+    'background:#1c1c1c',
+    'color:#fafafa',
+    'font: 500 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans'
+  ].join(';');
+  el.textContent = 'Who Owns You — loading…';
+  container.prepend(el);
+}
 
-//
+function renderBadgeContent(data) {
+  const el = document.getElementById('woy-badge');
+  if (!el) return;
 
-let polling = false;
-let rafId = null;
-
-function waitForChannelElement() {
-  if (!WOY.enabled) return;
-  if (polling) {
-    console.log("new polling attempted, cancelled");
+  if (!data || typeof data !== 'object') {
+    el.innerHTML = `
+      <div style="font-weight:700;margin-bottom:4px">Who Owns You</div>
+      <div style="opacity:.7">No ownership match found for this channel.</div>
+    `;
     return;
   }
-  polling = true;
 
-  function poll() {
-    if (!WOY.enabled) { polling = false; return; }
-    const channelLink = document.querySelector('ytd-video-owner-renderer a');
-    if (channelLink) {
-      polling = false;
-      setTimeout(checkCurrentChannel, 3000); // small delay to wait for new DOM
-    } else {
-      rafId = requestAnimationFrame(poll);
-    }
-  }
+  const owner = data.owner || 'Unknown owner';
+  const type  = data.ownership_type || 'Unknown';
+  const acq   = data.acquisition_date ? formatAcq(data.acquisition_date) : '—';
+  const notes = data.notes || '';
+  const sources = Array.isArray(data.source_url) ? data.source_url : [];
 
-  poll();
+  el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:4px">Who Owns You</div>
+    <div>${escapeHtml(owner)} <span style="opacity:.75">(${escapeHtml(type)})</span></div>
+    <div style="opacity:.8">Acquired: ${escapeHtml(acq)}</div>
+    <div style="margin-top:6px">${notes ? escapeHtml(notes) : '<span style="opacity:.6">No notes.</span>'}</div>
+    <div style="margin-top:6px;opacity:.85">${renderSources(sources)}</div>
+  `;
 }
 
-// initial call on page load
-clearInfoCard();
-waitForChannelElement();
+function formatAcq(s) {
+  const parts = String(s).split('-');
+  const [y, m] = [parts[0], parts[1]];
+  if (!y || y === '0000') return '—';
+  if (!m || m === '00') return y;
+  const month = {
+    '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun',
+    '07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'
+  }[m] || m;
+  return `${month} ${y}`;
+}
+
+function renderSources(urls) {
+  if (!urls || !urls.length) return 'No public source listed.';
+  return urls.map((u,i) =>
+    `<a href="${escapeAttr(u)}" target="_blank" rel="noopener noreferrer">Source ${i+1}</a>`
+  ).join(' · ');
+}
+
+function escapeHtml(str='') {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+function escapeAttr(str='') {
+  return String(str).replace(/"/g,'&quot;');
+}

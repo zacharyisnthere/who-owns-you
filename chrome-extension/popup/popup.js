@@ -1,83 +1,92 @@
-// MV3 popup logic
+// MV3 popup logic (clean + instant toggle)
 const KEY = "woy_enabled"; // storage key
+let seq = Date.now();      // monotonically increasing tag
 
-const toggleBtn = document.getElementById("toggleBtn");
+// UI elements (optional ones may be null depending on your HTML)
+const toggleBtn  = document.getElementById("toggleBtn");
 const statusIcon = document.getElementById("statusIcon");
 const statusText = document.getElementById("statusText");
 const githubLink = document.getElementById("githubLink");
 
-// optional: set your repo once here so you don't forget later
-githubLink.href = "https://github.com/YOUR_ORG/YOUR_REPO";
+// Set your repo if you want a quick link
+if (githubLink) githubLink.href = "https://github.com/YOUR_ORG/YOUR_REPO";
 
+// Initialize UI state
 document.addEventListener("DOMContentLoaded", async () => {
-  const enabled = await getEnabled();
-  applyUI(enabled);
-  toggleBtn.addEventListener("click", async () => {
-    const next = !(await getEnabled());
-    await setEnabled(next);
-    applyUI(next);
-
-    chrome.tabs.query({ url: "*//*.youtube.com/*" }, (tabs) => {
-        for (const t of tabs) {
-            chrome.tabs.sendMessage(t.id, { type: "WOY_TOGGLE", enabled: next });
-        }
-    });
-    
-    setToolbarIcon(next);  // update toolbar icon if you have on/off icon assets
-  });
+  const { [KEY]: enabled = false } = await chrome.storage.local.get(KEY);
+  applyUI(Boolean(enabled));
 });
 
-function applyUI(isOn) {
-  toggleBtn.textContent = isOn ? "ON" : "OFF";
-  toggleBtn.classList.toggle("on", isOn);
-  statusIcon.src = isOn ? "images/toggle-on.png" : "images/toggle-off.png";
-  statusText.textContent = isOn ? "Enabled" : "Disabled";
-  statusText.style.color = isOn ? "#4caf50" : "#a3a3a3";
+// Toggle click -> persist + message active tab + nudge others
+toggleBtn?.addEventListener('click', onToggleClick);
+
+async function onToggleClick() {
+  const { [KEY]: enabled = false } = await chrome.storage.local.get(KEY);
+  const next = !enabled;
+  await flip(next);
+  applyUI(next);
 }
 
-// storage helper
-const api = globalThis.chrome?.storage ?? globalThis.browser?.storage;
-const area = api?.sync ?? api?.local; // prefer sync, fallback to local
+async function flip(next) {
+  seq = Date.now(); // tag the change
+  await chrome.storage.local.set({ [KEY]: next, woy_seq: seq });
 
-function getEnabled() {
-  return new Promise((resolve) => {
-    if (!area) return resolve(false);
-    area.get([KEY], (res) => resolve(Boolean(res?.[KEY])));
-  });
-}
+  // Notify the active tab immediately (zero-lag UX)
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.id) {
+    await safeSendToTab(tab.id, { type: 'woy:setEnabled', value: next, seq });
+  }
 
-function setEnabled(value) {
-  return new Promise((resolve) => {
-    if (!area) return resolve();
-    area.set({ [KEY]: Boolean(value) }, resolve);
-  });
-}
-
-function notifyActiveTab(isOn) {
-  // fire-and-forget; content.js should react if it’s listening
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const tabId = tabs?.[0]?.id;
-    if (tabId) {
-      chrome.tabs.sendMessage(tabId, { type: "WOY_TOGGLE", enabled: isOn });
+  // Nudge all other YouTube tabs (storage.onChanged will also reach them)
+  const tabs = await chrome.tabs.query({ url: ['*://*.youtube.com/*'] });
+  for (const t of tabs) {
+    if (t.id !== tab?.id) {
+      safeSendToTab(t.id, { type: 'woy:setEnabled', value: next, seq }).catch(() => {});
     }
-  });
+  }
+
+  // Optional: toolbar icon, if you have on/off assets
+  setToolbarIcon(next);
+}
+
+async function safeSendToTab(tabId, msg) {
+  try {
+    await chrome.tabs.sendMessage(tabId, msg);
+  } catch (e) {
+    // If content script isn't ready, inject it and retry (needs "scripting" + host perms)
+    if (e?.message?.includes('Receiving end')) {
+      try {
+        await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+        await chrome.tabs.sendMessage(tabId, msg);
+      } catch (e2) {
+        console.warn('[WOY] Inject/resend failed:', e2);
+      }
+    } else {
+      console.warn('[WOY] sendMessage failed:', e);
+    }
+  }
+}
+
+// ---- UI helpers ----
+function applyUI(isOn) {
+  if (toggleBtn) {
+    toggleBtn.textContent = isOn ? "ON" : "OFF";
+    toggleBtn.classList.toggle("on", isOn);
+  }
+  if (statusIcon) {
+    statusIcon.src = isOn ? "images/toggle-on.png" : "images/toggle-off.png";
+  }
+  if (statusText) {
+    statusText.textContent = isOn ? "Enabled" : "Disabled";
+    statusText.style.color = isOn ? "#4caf50" : "#a3a3a3";
+  }
 }
 
 function setToolbarIcon(isOn) {
-  // Provide both sets of icons to use this feature; otherwise remove this function.
+  // Provide images/icon-on-*.png and images/icon-off-*.png or remove this
   chrome.action.setIcon({
     path: isOn
-      ? {
-          "16": "images/icon-on-16.png",
-          "32": "images/icon-on-32.png",
-          "64": "images/icon-on-64.png",
-          "128": "images/icon-on-128.png"
-        }
-      : {
-          "16": "images/icon-off-16.png",
-          "32": "images/icon-off-32.png",
-          "64": "images/icon-off-64.png",
-          "128": "images/icon-off-128.png"
-        }
+      ? { "16":"images/icon-on-16.png","32":"images/icon-on-32.png","64":"images/icon-on-64.png","128":"images/icon-on-128.png" }
+      : { "16":"images/icon-off-16.png","32":"images/icon-off-32.png","64":"images/icon-off-64.png","128":"images/icon-off-128.png" }
   });
 }
