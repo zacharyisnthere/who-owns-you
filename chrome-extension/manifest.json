@@ -1,7 +1,7 @@
 {
   "name": "Who Owns You",
   "description": "Shows which youtube channels are owned by private equity.",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "manifest_version": 3,
   "background": { "service_worker": "background.js" },
   "permissions": ["activeTab", "scripting", "storage", "tabs"],
