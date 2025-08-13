@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Who Owns You</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="row between">
+      <div class="row">
+        <img id="statusIcon" class="status-icon" src="images/toggle-off.svg" alt="Extension status" />
+        <div>
+          <h1>Who Owns You</h1>
+          <p class="sub">Revealing private equity ownership in media.</p>
+        </div>
+      </div>
+      <button id="toggleBtn" class="toggle">OFF</button>
+    </header>
+
+    <section class="hint">
+      <p>Toggle to enable/disable badges and ownership checks on YouTube.</p>
+    </section>
+
+    <footer class="row between">
+      <a id="githubLink" class="link" href="https://github.com/YOUR_ORG/YOUR_REPO" target="_blank" rel="noreferrer">GitHub</a>
+      <span id="statusText" class="status">Disabled</span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

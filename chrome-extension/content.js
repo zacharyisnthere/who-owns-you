@@ -1,6 +1,136 @@
 console.log("'Who Owns You' browser extension is running!");
 
 
+// Enable/Disable functionality=======
+//config / keys
+const KEY = "woy_enabled";
+
+//controller state
+const WOY = {
+  enabled: false,
+  observer: null,
+  intervals: new Set(),
+  cleanups: new Set()
+};
+
+//Utility: register a cleanup func to run on disable()
+function onCleanup(fn) {
+  WOY.cleanups.add(fn); 
+  return fn;
+}
+
+//clear all timers/obersevers/ui when disabling
+function runCleanup() {
+  //stop intervals/timeouts
+  for (const id of WOY.intervals) clearInterval(id);
+  WOY.intervals.clear();
+
+  //disconnect observers
+  if (WOY.observer) { 
+    WOY.observer.disconnect();
+    WOY.observer = null;
+  }
+
+  //remove injected UI
+  document.querySelectorAll(".woy-badge, .woy-panel").forEach(n => n.remove());
+
+  //run any extra cleanups registered
+  for (const fn of WOY.cleanups) {
+    try { fn(); } catch{}
+  }
+
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  WOY.cleanups.clear();
+}
+
+
+//storage helpers
+function getEnabled() {
+  return new Promise(resolve => {
+    chrome.storage.sync.get([KEY], (res) => resolve(Boolean(res?.[KEY])));
+  });
+}
+
+
+
+//==enable/disable==
+async function enable() {
+  if (WOY.enabled) return;
+  WOY.enabled = true;
+
+  // startup logic (load DB, inject UI, etc.)
+  await startOwnershipChecks(); 
+
+
+  //SPA URL-change observer (YouTube navigation)
+  let lastUrl = location.href;
+  const obs = new MutationObserver(() => {
+    if (!WOY.enabled) return;
+    const currentUrl = location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      console.log("🔄 URL changed:", currentUrl);
+      clearInfoCard();
+      waitForChannelElement(); // will be gated
+    }
+  });
+  obs.observe(document, { childList: true, subtree: true });
+  WOY.observer = obs;
+
+  // initial pass per current page
+  clearInfoCard();
+  waitForChannelElement();
+
+  console.log("[WOY] ENABLED");
+}
+
+function disable() {
+  if (!WOY.enabled) return;
+  WOY.enabled = false;
+  runCleanup();
+  console.log("[WOY] DISABLED");
+}
+
+
+//===wiring to popup toggle====
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "WOY_TOGGLE") {
+    msg.enabled ? enable() : disable();
+  }
+});
+
+// Initial state when the content script loads on a page
+(async () => {
+  const on = await getEnabled();
+  on ? enable() : disable();
+})();
+
+//Feature logic TODOOOOO
+let recheckTimer = null;
+function scheduleRecheck() {
+  if (recheckTimer) return;
+  recheckTimer = setTimeout(() => {
+    recheckTimer = null;
+    if (WOY.enabled) checkCurrentChannel();
+  }, 1000);
+  WOY.intervals.add(recheckTimer);
+  onCleanup(() => { clearTimeout(recheckTimer); recheckTimer = null});
+}
+
+async function startOwnershipChecks() {
+  // Example: load DB once and keep reference, with cleanup if needed
+  const abort = new AbortController();
+  onCleanup(() => abort.abort());
+
+  await loadChannelDatabase({ signal: abort.signal }); // adapt your loader to accept signal
+
+  // Initial pass
+  await checkCurrentChannel();
+
+  // If you have any periodic polling, keep track of it
+  // const id = setInterval(() => WOY.enabled && checkCurrentChannel(), 10_000);
+  // WOY.intervals.add(id);
+}
 
 
 // Call this with either a matched data object or null/undefined
@@ -10,6 +140,8 @@ console.log("'Who Owns You' browser extension is running!");
 const CARD_ID = 'woy-info-card';
 
 async function displayData(data) {
+  if (!WOY.enabled) return;
+
   console.log("Displaying info box...")
 
   // First, check to see if the page is a video, channel page, or short
@@ -195,8 +327,12 @@ function getPageType(url = location.href) {
 
 
 // Load the JSON file
+let CHANNEL_DB = null;
+
 async function loadChannelDatabase() {
   console.log("Loading channels.json...");
+  if (CHANNEL_DB) return CHANNEL_DB; //don't need to reload channels.json if it's already cached
+
   const response = await fetch(chrome.runtime.getURL("data/channels.json"));
 
   if (!response.ok) {
@@ -204,9 +340,9 @@ async function loadChannelDatabase() {
     return [];
   }
 
-  const data = await response.json();
-  console.log("Loaded channel database:", data);
-  return data;
+  CHANNEL_DB = await response.json();
+  console.log("Loaded channel databse:", CHANNEL_DB);
+  return CHANNEL_DB;
 }
 
 
@@ -295,6 +431,8 @@ function getChannelFromVideoPage() {
 
 //run the detection and search logic
 async function checkCurrentChannel() {
+  if (!WOY.enabled) return;
+
   console.log("Checking for channel info...");
   let pageType = getPageType();
   console.log("Page type identified:", pageType);
@@ -330,64 +468,30 @@ async function checkCurrentChannel() {
     default:
       console.log("🚫 Channel data cannot be found from URL or DOM, returned null");
   }
-
-  // //check via url
-  // const id = getChannelFromURL();
-  // if (id) {
-  //   console.log("✅ Found channel from URL: ", id);
-  //   await searchChannelDatabase(id.value);
-  //   return;
-  // } else {
-  //   console.log("⚠️ No channel from URL");
-  // }
-
-  // //check via dom
-  // const id2 = getChannelFromVideoPage();
-  // if (id2) {
-  //   console.log("✅ Found channel from DOM: ", id2);
-  //   await searchChannelDatabase(id2.value);
-  //   return;
-  // } else {
-  //   console.log("⚠️ No channel from DOM");
-  // }
-
-  // console.log("🚫 Channel data not found from URL or DOM, returned null");
 }
-
-
-// MutationObserver for single-page app navigation
-let lastUrl = location.href;
-const observer = new MutationObserver(() => {
-  const currentUrl = location.href;
-  if (currentUrl !== lastUrl) {
-    lastUrl = currentUrl;
-    console.log("🔄 URL changed:", currentUrl);
-    clearInfoCard();
-    waitForChannelElement();
-  }
-});
-
-observer.observe(document, { subtree: true, childList: true }); 
 
 
 //
 
 let polling = false;
+let rafId = null;
 
 function waitForChannelElement() {
+  if (!WOY.enabled) return;
   if (polling) {
     console.log("new polling attempted, cancelled");
     return;
   }
-    polling = true;
+  polling = true;
 
   function poll() {
+    if (!WOY.enabled) { polling = false; return; }
     const channelLink = document.querySelector('ytd-video-owner-renderer a');
     if (channelLink) {
       polling = false;
       setTimeout(checkCurrentChannel, 3000); // small delay to wait for new DOM
     } else {
-      requestAnimationFrame(poll);
+      rafId = requestAnimationFrame(poll);
     }
   }
 
@@ -397,10 +501,3 @@ function waitForChannelElement() {
 // initial call on page load
 clearInfoCard();
 waitForChannelElement();
-
-
-// setTimeout(checkCurrentChannel, 1000); //just waits for 1000ms, could change to polling the DOM but this works for now.
-/*In fact, I need to change this to polling to the dom.
-* There's a bug right now where the search fails if I open a video from the search page, but still works on reloading or opening it from a different page. 
-* Theory rn is that the load times from the search page are longer than 1000, so when checkCurrentChannel is called it fails.
-*/
