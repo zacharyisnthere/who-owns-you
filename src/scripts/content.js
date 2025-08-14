@@ -1,4 +1,5 @@
-console.log("'Who Owns You' browser extension is running!");
+if (typeof browser === "undefined") { var browser = chrome; }
+
 
 // ===== Enable/Disable infrastructure =====
 const KEY = "woy_enabled"; // storage key
@@ -52,18 +53,18 @@ function runCleanup() {
 init().catch(console.error);
 
 async function init() {
-  const { [KEY]: enabled = false, woy_seq = 0 } = await chrome.storage.local.get([KEY, 'woy_seq']);
+  const { [KEY]: enabled = false, woy_seq = 0 } = await browser.storage.local.get([KEY, 'woy_seq']);
   applyEnabled(!!enabled, Number(woy_seq) || 0, 'init');
 
   // Instant flip for the active tab
-  chrome.runtime.onMessage.addListener((m) => {
+  browser.runtime.onMessage.addListener((m) => {
     if (m?.type === 'woy:setEnabled') {
       applyEnabled(!!m.value, Number(m.seq) || 0, 'message');
     }
   });
 
   // Cross-tab/state sync
-  chrome.storage.onChanged.addListener((changes, area) => {
+  browser.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     const has = Object.prototype.hasOwnProperty.bind(changes);
     if (has(KEY) || has('woy_seq')) {
@@ -197,7 +198,7 @@ let CHANNEL_DB = null;
 
 async function loadChannelDatabase() {
   // IMPORTANT: if your file lives at project root, change to "channels.json"
-  const url = chrome.runtime.getURL("data/channels.json");
+  const url = browser.runtime.getURL("data/channels.json");
   console.log("[WOY] Loading channels:", url);
 
   if (CHANNEL_DB) return CHANNEL_DB;
