@@ -110,12 +110,14 @@ function setToolbarIcon(isOn) {
       ? {
           "16":  `${IMG_ROOT}/icon-on-16.png`,
           "32":  `${IMG_ROOT}/icon-on-32.png`,
+          "48":  `${IMG_ROOT}/icon-on-48.png`,
           "64":  `${IMG_ROOT}/icon-on-64.png`,
           "128": `${IMG_ROOT}/icon-on-128.png`
         }
       : {
           "16":  `${IMG_ROOT}/icon-off-16.png`,
           "32":  `${IMG_ROOT}/icon-off-32.png`,
+          "48":  `${IMG_ROOT}/icon-off-48.png`,
           "64":  `${IMG_ROOT}/icon-off-64.png`,
           "128": `${IMG_ROOT}/icon-off-128.png`
         }
