@@ -84,8 +84,8 @@ See CONTRIBUTING.md for details.
 ## ❓ FAQ
 - **Q: Why is/isn't ___ channel flagged?**
   - A: The dataset is a work-in-progress, and there are a lot of channels either not in the dataset yet or whose ownership isn't confirmed from public sources. Please contribute via PR!
-- **Q: Does this run on Firefox?**
-  - A: Not yet, but Firefox is my daily-driver browser, so be ready for a future release soon!
+- **Q: What browsers does this run on?**
+  - A: This extension has been developed and tested for Firefox and all Chromium-based browsers (Chrome, Brave, Edge, etc.). Send me a message if you have a browser you use that you want this extension to be ported to!
 - **Q: How do I verify an ownership claim?**
   - A: All claims should be backed by public sources linked in the dataset, however it's always a good idea to verify information for yourself. DYOR and all that.
 
