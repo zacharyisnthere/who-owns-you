@@ -3,6 +3,11 @@
 </br>
 <sub>*This project was inspired by <a href='https://www.youtube.com/watch?v=hJ-rRXWhElI'>this youtube video.</a>*</sub>
 ***
+## Screenshots
+<img src="https://github.com/zacharyisnthere/who-owns-you/blob/main/screenshots/screenshot-4.png" width="480">
+<img src="https://github.com/zacharyisnthere/who-owns-you/blob/main/screenshots/screenshot-7.png" width="480">
+<img src="https://github.com/zacharyisnthere/who-owns-you/blob/main/screenshots/screenshot-8.png" width="480">
+
 ## 🚀Quick start (dev install)
 **1. Clone this repo**</br>
 ```bash
@@ -77,12 +82,12 @@ See CONTRIBUTING.md for details.
 - Install via "Load unpacked" in any Chromium-based browser
 
 ## ❓ FAQ
-**Q: Why ___ channel flagged?**
-A: The dataset is a work-in-progress, and there are a lot of channels either not in the dataset yet or whose ownership isn't confirmed from public sources. Please contribute via PR!
-**Q: Does this run on Firefox?**
-A: Not yet, but Firefox is my daily-driver browser, so be ready for a future release soon!
-**Q: How do I verify an ownership claim?**
-A: All claims should be backed by public sources linked in the dataset, however it's always a good idea to verify information for yourself. DYOR and all that.
+- **Q: Why is/isn't ___ channel flagged?**
+  - A: The dataset is a work-in-progress, and there are a lot of channels either not in the dataset yet or whose ownership isn't confirmed from public sources. Please contribute via PR!
+- **Q: Does this run on Firefox?**
+  - A: Not yet, but Firefox is my daily-driver browser, so be ready for a future release soon!
+- **Q: How do I verify an ownership claim?**
+  - A: All claims should be backed by public sources linked in the dataset, however it's always a good idea to verify information for yourself. DYOR and all that.
 
 ## License
 [MIT](https://github.com/zacharyisnthere/who-owns-you/blob/main/LICENSE) - free to use, modify, and distribute.
